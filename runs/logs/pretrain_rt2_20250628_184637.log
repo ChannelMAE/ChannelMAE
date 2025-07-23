@@ -1,0 +1,40 @@
+GPU devices found:
+  PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')
+✅ GPU acceleration enabled (MPS)
+================================================================================
+ReconMAE Pretraining Script
+================================================================================
+Data path: ./data/ps2_p72/rt2/snr10to25_speed5
+Model: ReconMAE
+Experiment: siso_1_umi_block_1_ps2_p72
+Masking type: discrete
+Epochs: 80
+Learning rate: 0.001
+Batch sizes: train=64, eval=64
+================================================================================
+Creating dataset with masking type: discrete
+✅ Dataset created successfully
+✅ Data loaders created: 507 train batches, 57 eval batches
+✅ Model hyperparameters loaded
+✅ Input shape determined: (2, 72, 2)
+✅ Model initialized successfully
+Model summary:
+Model: "recon_mae"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ encoder (Encoder)           multiple                  125856    
+                                                                 
+ decoder (Decoder)           multiple                  27346     
+                                                                 
+ decoder_1 (Decoder)         multiple                  53074     
+                                                                 
+=================================================================
+Total params: 206276 (805.77 KB)
+Trainable params: 206276 (805.77 KB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+🚀 Starting training...
+Initial validation loss: 1.7564
+Epoch 1/80
+      1/Unknown - 1s 1s/step - loss: 1.7355      2/Unknown - 2s 63ms/step - loss: 1.5063      3/Unknown - 2s 58ms/step - loss: 1.3104

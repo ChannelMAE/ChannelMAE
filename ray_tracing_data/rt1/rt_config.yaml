@@ -1,0 +1,27 @@
+bandwidth: 2160000.0
+batch_size_cir: 1000
+cm_cell_size: !!python/tuple
+- 1.0
+- 1.0
+cm_size:
+- 800.0
+- 800.0
+frequency: 2100000000.0
+max_depth: 5
+max_dist: 400
+max_gain_db: 0
+max_num_paths: 75
+min_dist: 10
+min_gain_db: -130
+num_ofdm_symbols: 14
+num_rx: 1
+num_rx_ant: 1
+num_tx: 1
+num_tx_ant: 1
+rt_num_samples: 2000000.0
+rx_velocities:
+- 3.0
+- 3.0
+- 0
+subcarrier_spacing: 30000.0
+target_num_cirs: 8000

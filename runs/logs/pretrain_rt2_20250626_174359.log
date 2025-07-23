@@ -1,0 +1,18 @@
+GPU devices found:
+  PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')
+✅ GPU acceleration enabled (MPS)
+================================================================================
+ReconMAE Pretraining Script
+================================================================================
+Data path: ./data/ps2_p72/rt2/snr10to25_speed5
+Model: ReconMAE
+Experiment: siso_1_umi_block_1_ps2_p72
+Masking type: discrete
+Epochs: 80
+Learning rate: 0.001
+Batch sizes: train=64, eval=64
+================================================================================
+Creating dataset with masking type: discrete
+tf.Tensor([ 1  1  2 72  2], shape=(5,), dtype=int32)
+tf.Tensor([ 1  1  2 72  2], shape=(5,), dtype=int32)
+❌ Error creating dataset: {{function_node __wrapped__StatelessRandomUniformIntV2_device_/job:localhost/replica:0/task:0/device:GPU:0}} minval must be 0-D, got shape [2] [Op:StatelessRandomUniformIntV2] name: 

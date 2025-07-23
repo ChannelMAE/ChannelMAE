@@ -1,0 +1,42 @@
+GPU devices found:
+  PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')
+✅ GPU acceleration enabled (MPS)
+================================================================================
+ReconMAE Pretraining Script
+================================================================================
+Data path: ./data/ps2_p72/rt2/snr10to25_speed5
+Model: ReconMAE
+Experiment: siso_1_umi_block_1_ps2_p72
+Masking type: discrete
+Epochs: 80
+Learning rate: 0.001
+Batch sizes: train=64, eval=64
+================================================================================
+Creating dataset with masking type: discrete
+tf.Tensor([ 1  1  2 72  2], shape=(5,), dtype=int32)
+tf.Tensor([ 1  1  2 72  2], shape=(5,), dtype=int32)
+✅ Dataset created successfully
+✅ Data loaders created: 507 train batches, 57 eval batches
+✅ Model hyperparameters loaded
+✅ Input shape determined: (2, 72, 2)
+✅ Model initialized successfully
+Model summary:
+Model: "recon_mae"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ encoder (Encoder)           multiple                  125856    
+                                                                 
+ decoder (Decoder)           multiple                  27346     
+                                                                 
+ decoder_1 (Decoder)         multiple                  53074     
+                                                                 
+=================================================================
+Total params: 206276 (805.77 KB)
+Trainable params: 206276 (805.77 KB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+🚀 Starting training...
+Initial validation loss: 1.7677
+Epoch 1/80
+      1/Unknown - 1s 1s/step - loss: 1.7621      2/Unknown - 2s 55ms/step - loss: 1.5052      4/Unknown - 2s 47ms/step - loss: 1.2115      6/Unknown - 2s 45ms/step - loss: 1.0535      8/Unknown - 2s 45ms/step - loss: 0.9387     10/Unknown - 2s 44ms/step - loss: 0.8653     12/Unknown - 2s 44ms/step - loss: 0.8078     14/Unknown - 2s 44ms/step - loss: 0.7695     16/Unknown - 2s 43ms/step - loss: 0.7394     18/Unknown - 2s 43ms/step - loss: 0.7130     20/Unknown - 2s 43ms/step - loss: 0.6936     21/Unknown - 2s 44ms/step - loss: 0.6855     23/Unknown - 2s 44ms/step - loss: 0.6684     25/Unknown - 3s 44ms/step - loss: 0.6541     27/Unknown - 3s 44ms/step - loss: 0.6403     28/Unknown - 3s 44ms/step - loss: 0.6335     30/Unknown - 3s 44ms/step - loss: 0.6206     32/Unknown - 3s 45ms/step - loss: 0.6094     34/Unknown - 3s 45ms/step - loss: 0.6008     36/Unknown - 3s 45ms/step - loss: 0.5924     38/Unknown - 3s 45ms/step - loss: 0.5846     40/Unknown - 3s 44ms/step - loss: 0.5766     42/Unknown - 3s 44ms/step - loss: 0.5696     44/Unknown - 3s 44ms/step - loss: 0.5616     46/Unknown - 3s 44ms/step - loss: 0.5534     48/Unknown - 4s 44ms/step - loss: 0.5461     50/Unknown - 4s 44ms/step - loss: 0.5384     52/Unknown - 4s 44ms/step - loss: 0.5309     54/Unknown - 4s 44ms/step - loss: 0.5232     56/Unknown - 4s 44ms/step - loss: 0.5165     58/Unknown - 4s 44ms/step - loss: 0.5093     60/Unknown - 4s 44ms/step - loss: 0.5031     62/Unknown - 4s 44ms/step - loss: 0.4970     64/Unknown - 4s 44ms/step - loss: 0.4910     66/Unknown - 4s 44ms/step - loss: 0.4846     68/Unknown - 4s 44ms/step - loss: 0.4788     70/Unknown - 5s 44ms/step - loss: 0.4737     72/Unknown - 5s 44ms/step - loss: 0.4681     74/Unknown - 5s 44ms/step - loss: 0.4627     76/Unknown - 5s 44ms/step - loss: 0.4573

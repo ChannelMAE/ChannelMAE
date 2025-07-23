@@ -1,0 +1,42 @@
+✅ GPU acceleration enabled (MPS)
+Forcing CPU for pretraining, unless APPLE fixes MPS support
+================================================================================
+ReconMAE Pretraining Script
+================================================================================
+Data path: ./data/ps2_p72/uma/snr10to25_speed5
+Model: ReconMAE
+Experiment: siso_1_umi_block_1_ps2_p72
+Masking type: discrete
+Epochs: 80
+Learning rate: 0.001
+Batch sizes: train=64, eval=64
+================================================================================
+Creating dataset with masking type: discrete
+✅ Dataset created successfully
+✅ Data loaders created: 507 train batches, 57 eval batches
+✅ Model hyperparameters loaded
+✅ Input shape determined: (2, 72, 2)
+Aux decoder: <cebed.models_with_ssl.recon_net.EfficientDecoder object at 0x15a444f90>
+✅ Model initialized successfully: ReconMAE
+Model summary:
+Model: "recon_mae"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ encoder (Encoder)           multiple                  125856    
+                                                                 
+ efficient_decoder (Efficie  multiple                  2754      
+ ntDecoder)                                                      
+                                                                 
+ efficient_decoder_1 (Effic  multiple                  3890      
+ ientDecoder)                                                    
+                                                                 
+=================================================================
+Total params: 132500 (517.58 KB)
+Trainable params: 132500 (517.58 KB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________
+🚀 Starting training for ReconMAE...
+Initial validation loss: 2.1655
+Epoch 1/80
+      1/Unknown - 1s 1s/step - loss: 2.1855      2/Unknown - 1s 132ms/step - loss: 2.2917      3/Unknown - 2s 130ms/step - loss: 2.2748      4/Unknown - 2s 127ms/step - loss: 2.1734      5/Unknown - 2s 126ms/step - loss: 2.0955      6/Unknown - 2s 125ms/step - loss: 2.0069      7/Unknown - 2s 123ms/step - loss: 1.9227      8/Unknown - 2s 123ms/step - loss: 1.8393      9/Unknown - 2s 123ms/step - loss: 1.7656     10/Unknown - 2s 123ms/step - loss: 1.6977     11/Unknown - 3s 123ms/step - loss: 1.6320     12/Unknown - 3s 123ms/step - loss: 1.5714     13/Unknown - 3s 124ms/step - loss: 1.5165     14/Unknown - 3s 124ms/step - loss: 1.4668     15/Unknown - 3s 130ms/step - loss: 1.4225     16/Unknown - 3s 130ms/step - loss: 1.3822     17/Unknown - 3s 131ms/step - loss: 1.3437
