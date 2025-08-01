@@ -38,10 +38,10 @@ class LabelPilotDataset(BaseDataset):
         self.h_samples = np.array(data["h"][:])
 
         # create input-label pairs for main task (channel estimation task)
-        self.mask = np.zeros((1, 1, 14, 72))  # [tx, stream, symbols, subcarriers]
-        self.mask[0, 0, [4, 11], :] = 1  # NOTE: set label pilots at symbols 4,11 (original pilots at symbol 3, 10)
-        self.labels_aux = np.array(data["h"][:]) * self.mask # NOTE: use ground-truth channels of label pilots
-        
+        self.label_pilot_mask = np.zeros((1, 1, 14, 72))  # [tx, stream, symbols, subcarriers]
+        self.label_pilot_mask[0, 0, [4, 11], :] = 1  # NOTE: set label pilots at symbols 4,11 (original pilots at symbol 3, 10)
+        self.labels_aux = self.h_samples * self.label_pilot_mask[np.newaxis, np.newaxis, :, :, :, :]  # NOTE: use ground-truth channels of label pilots
+
         # # NOTE: another option: use LS estimates of label pilots
         # self.labels_main =  self.y_samples/self.x_samples * self.mask 
 
@@ -82,7 +82,8 @@ class LabelPilotDataset(BaseDataset):
             label = tf.transpose(label, [1, 2, 0]) # [num_symbols, num_subcarriers, num_channels]
 
         # keep the label's shape as [batch_size, 2, 72, 2]
-        label_pilot_indices = tf.where(self.mask) # pilot-location 1; non-pilot-location 0
+        label_pilot_indices = tf.where(self.label_pilot_mask) # pilot-location 1; non-pilot-location 0
+
         # gather the pilot symbols
         symbol_indices, _ = tf.unique(label_pilot_indices[:, -2])
         low_label = tf.gather(indices=symbol_indices, params=label, axis=0)

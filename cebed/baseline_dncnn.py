@@ -26,7 +26,7 @@ from cebed.utils_callback import get_training_callbacks
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description='Train DnCNN baseline')
-    parser.add_argument('--epochs', type=int, default=80, 
+    parser.add_argument('--epochs', type=int, default=1, 
                        help='Number of training epochs (default: 1)')
     parser.add_argument('--run_name', type=str, default='DnCNN_bs64_lr0.001_baseline',
                        help='Name for this training run (default: DnCNN_bs64_lr0.001_baseline)')
@@ -67,11 +67,11 @@ def main():
     print(f"est_h (output): {est_h.shape}")
     print(MyModel.summary())
     
-    MyDataset = DenoiseDataset(path="./data/ps2_p72/uma/snr10to25_speed5", 
+    MyDataset = DenoiseDataset(path="./data/ps2_p72/rt1/snr10to20_speed5", 
                                 train_split=0.9, 
                                 main_input_type="low",
                                 aux_input_type="raw", # y and y_noise shape: [batch, 14, 72, 2]
-                                aug_noise_std=0.5,
+                                aug_noise_std=1,
                                 seed=0)
     
     # already set up the dataset in the above line
@@ -89,7 +89,7 @@ def main():
     
     # Compile model
     MyModel.compile(
-        optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=0.001),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
         loss=tf.keras.losses.MeanSquaredError(name="loss")
     )
     

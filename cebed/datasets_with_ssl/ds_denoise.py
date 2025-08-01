@@ -54,7 +54,7 @@ class DenoiseDataset(BaseDataset):
         train_split: float = 0.9,
         main_input_type: str = "low", # this only refers to input_type of the main task
         aux_input_type: str = "raw", # this only refers to input_type of the auxilary task
-        aug_noise_std: float = 1.0,
+        aug_noise_std: float = 0.5,
         seed: int = 0,
     ):
         self.aug_noise_std = aug_noise_std
@@ -175,9 +175,47 @@ if __name__ == "__main__":
     train_loader, eval_loader = MyDataset.get_loaders(
         train_batch_size=64,
         eval_batch_size=64,
-        task = "aux"  # "aux" for pretrainig; "main" for online inference; Training task is always "aux"
+        task = "both"  # "aux" for pretrainig; "main" for online inference; Training task is always "aux"
     )
 
-    for x, y in train_loader.take(1):
-        print(f"x shape: {x.shape}")
-        print(f"y shape: {y.shape}")
+    for (x_main, y_main), (x_aux, y_aux) in train_loader.take(1):
+        print(f"x_main shape: {x_main.shape}")
+        print(f"y_main shape: {y_main.shape}")
+        print(f"x_aux shape: {x_aux.shape}")
+        print(f"y_aux shape: {y_aux.shape}")
+
+        import matplotlib.pyplot as plt
+
+        # Create a 2x2 subplot figure
+        fig, axes = plt.subplots(2, 2, figsize=(12, 4))
+
+        # Visualize x_main[0,:,:,0]
+        im1 = axes[0,0].imshow(x_main[0,:,:,0].numpy(), cmap='viridis', aspect='auto')
+        axes[0,0].set_title('x_main[0,:,:,0]')
+        axes[0,0].set_xlabel('Subcarrier')
+        axes[0,0].set_ylabel('Symbol')
+        plt.colorbar(im1, ax=axes[0,0])
+
+        # Visualize y_main[0,:,:,0]
+        im2 = axes[0,1].imshow(y_main[0,:,:,0].numpy(), cmap='viridis', aspect='auto')
+        axes[0,1].set_title('y_main[0,:,:,0]')
+        axes[0,1].set_xlabel('Subcarrier')
+        axes[0,1].set_ylabel('Symbol')
+        plt.colorbar(im2, ax=axes[0,1])
+
+        # Visualize x_aux[0,:,:,0]
+        im3 = axes[1,0].imshow(x_aux[0,:,:,0].numpy(), cmap='viridis', aspect='auto')
+        axes[1,0].set_title('x_aux[0,:,:,0]')
+        axes[1,0].set_xlabel('Subcarrier')
+        axes[1,0].set_ylabel('Symbol')
+        plt.colorbar(im3, ax=axes[1,0])
+
+        # Visualize y_aux[0,:,:,0]
+        im4 = axes[1,1].imshow(y_aux[0,:,:,0].numpy(), cmap='viridis', aspect='auto')
+        axes[1,1].set_title('y_aux[0,:,:,0]')
+        axes[1,1].set_xlabel('Subcarrier')
+        axes[1,1].set_ylabel('Symbol')
+        plt.colorbar(im4, ax=axes[1,1])
+
+        plt.tight_layout()
+        plt.savefig('denoise_example_data.png', dpi=300)

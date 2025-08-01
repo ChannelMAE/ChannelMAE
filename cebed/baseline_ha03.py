@@ -24,6 +24,58 @@ import cebed.models as cm
 from cebed.utils_callback import get_training_callbacks
 
 
+def visualize_model_performance(x, y, model_output, sample_idx=20, title_suffix="", filename="visualization.png"):
+    """
+    Visualize input, label, and model output for comparison.
+    
+    Args:
+        x: Input tensor
+        y: Label tensor  
+        model_output: Model output tensor
+        sample_idx: Index of sample to visualize
+        title_suffix: Suffix to add to titles
+        filename: Output filename for the plot
+    """
+    import matplotlib.pyplot as plt
+    
+    # Get the data for visualization
+    input_data = x[sample_idx, :, :, 0].numpy()
+    label_data = y[sample_idx, :, :, 0].numpy()
+    output_data = model_output[sample_idx, :, :, 0].numpy()
+    
+    # Calculate unified range for all three plots
+    vmin = min(input_data.min(), label_data.min(), output_data.min())
+    vmax = max(input_data.max(), label_data.max(), output_data.max())
+
+    fig, axs = plt.subplots(1, 3, figsize=(15, 2))
+    
+    # Plot input with colorbar
+    im1 = axs[0].imshow(input_data, aspect='auto', cmap='viridis', vmin=vmin, vmax=vmax)
+    axs[0].set_title(f'Input{title_suffix}', fontsize=12)
+    axs[0].set_xlabel('Subcarriers')
+    axs[0].set_ylabel('OFDM Symbols')
+    plt.colorbar(im1, ax=axs[0], shrink=0.8)
+    
+    # Plot label with colorbar
+    im2 = axs[1].imshow(label_data, aspect='auto', cmap='viridis')
+    axs[1].set_title(f'Label{title_suffix}', fontsize=12)
+    axs[1].set_xlabel('Subcarriers')
+    axs[1].set_ylabel('OFDM Symbols')
+    plt.colorbar(im2, ax=axs[1], shrink=0.8)
+    
+    # # Plot output with colorbar
+    im3 = axs[2].imshow(output_data, aspect='auto', cmap='viridis', vmin=vmin, vmax=vmax)
+    axs[2].set_title(f'Model Output{title_suffix}', fontsize=12)
+    axs[2].set_xlabel('Subcarriers')
+    axs[2].set_ylabel('OFDM Symbols')
+    plt.colorbar(im3, ax=axs[2], shrink=0.8)
+    
+    plt.tight_layout()
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    print(f"Visualization saved to {filename}")
+    plt.close()  # Close the figure to free memory
+
+
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description='Train HA03 baseline')
@@ -45,11 +97,11 @@ def main():
     # Parse arguments
     args = parse_arguments()
     
-    MyDataset = LabelPilotDataset(path="./data/ps2_p72/uma/snr10to25_speed5", 
+    MyDataset = LabelPilotDataset(path="./data/ps2_p72/rt4/snr10to25_speed5", 
                                 train_split=0.9, 
                                 main_input_type="low",
                                 aux_input_type="low",
-                                seed=0)
+                                seed=42)
     
     # set up the dataset in the above line
 
@@ -71,9 +123,18 @@ def main():
         print(f"Model input shape: {x.shape}")
         print(f"Label shape: {y.shape}")
         output = MyModel(x)
+
         # output shape: [batch, 2, 72, 2]
         print(f"Model output shape: {output.shape}")
-       
+    
+        # Visualize before training
+        visualize_model_performance(
+            x, y, output, 
+            sample_idx=0, 
+            title_suffix=" (Before Training)",
+            filename="ha03_data_example_before_training.png"
+        )
+        break
 
     print(MyModel.summary())
     
@@ -84,7 +145,7 @@ def main():
     
     # Compile model
     MyModel.compile(
-        optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=0.001),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
         loss=tf.keras.losses.MeanSquaredError(name="loss"),
         # metrics=['mae']
     )
@@ -133,6 +194,21 @@ def main():
     print(f"Training History saved to: {os.path.join(log_dir, 'training_history.csv')}")
 
     MyModel.save_weights(os.path.join(log_dir, "ha03.h5"))
+    
+    # Visualize after training with the same data
+    print("\nGenerating post-training visualization...")
+    for x, y in train_loader.take(1):
+        # Get output from trained model
+        output_after_training = MyModel(x)
+        
+        # Visualize after training
+        visualize_model_performance(
+            x, y, output_after_training,
+            sample_idx=0,
+            title_suffix=" (After Training)",
+            filename="ha03_data_example_after_training.png"
+        )
+        break
 
     # We can use classic_evalutor.py
     # NOTE: Only when evaluation channels to compute to compute channel MSEs, we do bilinear resizing to the model output

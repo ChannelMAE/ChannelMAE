@@ -11,7 +11,6 @@ sys.path.append(root_path)
 from cebed.models.common import ResidualBlock, FeedForward
 from cebed.models.base import BaseModel
 
-
 class GlobalSelfAttention(tf.keras.layers.Layer):
     """
     Self attention module as decribed in https://arxiv.org/abs/1706.03762
@@ -40,7 +39,8 @@ class GlobalSelfAttention(tf.keras.layers.Layer):
         # attn_output.shape: [B, seq_len, X], X = output_shape
         # if no output_shape is provided when initialization, then X = query seq. feature dim 
         attn_output = self.mha(query=x, value=x, key=x) # query seq. = value seq. = key seq. ==> self-attention!
-        x = self.layernorm(attn_output) 
+        x = self.add([x, attn_output])
+        x = self.layernorm(x) 
 
         return x  # [B, seq_len, X]
     
@@ -69,7 +69,7 @@ class EncoderLayer(tf.keras.layers.Layer):
             num_heads=num_heads, key_dim=key_dim, dropout=dropout_rate
         ) # value_dim = key_dim (= query_dim) if not provided
 
-        self.ffn = FeedForward(key_dim=ff_dim, ff_dim=ff_dim) # two-layer MLP
+        self.ffn = FeedForward(key_dim=ff_dim, ff_dim=ff_dim) # FIXME： two-layer MLP
 
     
     def call(self, x: tf.Tensor) -> tf.Tensor:
@@ -217,8 +217,11 @@ class HA02(BaseModel):
         # ff_dim = num_pilot_symbols*num_pilot_subcarriers
         # We follow the original transformer paper
         # and keep the dimensions of all the sub-layers equal
-        ff_dim = np.prod(input_shape[1:-1])
+        
+        #ff_dim = np.prod(input_shape[1:-1]) # if the number of pilots changes, the model arch. also changes!
+        ff_dim = num_heads * head_size
 
+        # self.project_layer = tf.keras.layers.Dense(ff_dim) # project inputs to ff_dim before encoder
         self.encoder = Encoder(
             num_layers=self.num_en_layers,
             key_dim=head_size, # 72
@@ -256,6 +259,9 @@ class HA02(BaseModel):
         # the channel dim, that is why we are permuting the inputs
         # [batch, c, nps*npf]
         inputs = tf.keras.layers.Permute((2, 1))(inputs)
+
+        # Project inputs to ff_dim before encoder
+        # inputs = self.project_layer(inputs)
 
         # [batch, c, nps*npf] ==> seq_len = c, feature_dim = nps*npf
         latent = self.encoder(inputs) # latent length is the same as the input length
@@ -367,6 +373,74 @@ if __name__ == "__main__":
 
     from cebed.datasets_with_ssl.ds_classic import ClassicDataset
     import cebed.models as cm
+    
+    # Alternative FLOP calculation using model summary and manual calculation
+    def estimate_flops_from_params(model, input_shape):
+        """Estimate FLOPs based on model parameters and operations"""
+        total_params = model.count_params()
+        print(f"Total parameters: {total_params:,}")
+        
+        # More detailed FLOP estimation for transformer models
+        batch_size, seq_len, hidden_dim = input_shape[0], input_shape[1] * input_shape[2], input_shape[3]
+        
+        # Get model configuration if available
+        if hasattr(model, 'num_layers'):
+            num_layers = model.num_layers
+        else:
+            num_layers = 1  # Default fallback
+            
+        if hasattr(model, 'num_heads'):
+            num_heads = model.num_heads
+        else:
+            num_heads = hidden_dim  # Default assumption
+            
+        head_dim = hidden_dim // num_heads if num_heads > 0 else hidden_dim
+        ff_dim = 4 * hidden_dim  # Standard transformer FFN expansion
+        
+        print(f"Model configuration:")
+        print(f"  - Sequence length: {seq_len}")
+        print(f"  - Hidden dimension: {hidden_dim}")
+        print(f"  - Number of layers: {num_layers}")
+        print(f"  - Number of heads: {num_heads}")
+        print(f"  - Head dimension: {head_dim}")
+        print(f"  - FFN dimension: {ff_dim}")
+        
+        # Calculate FLOPs per layer
+        # 1. Self-attention: Q, K, V projections + attention computation + output projection
+        qkv_flops = 3 * seq_len * hidden_dim * hidden_dim  # Q, K, V projections
+        attention_flops = seq_len * seq_len * hidden_dim  # Attention computation
+        output_proj_flops = seq_len * hidden_dim * hidden_dim  # Output projection
+        attention_total = qkv_flops + attention_flops + output_proj_flops
+        
+        # 2. Feed-forward network: two linear layers
+        ff_flops = seq_len * (hidden_dim * ff_dim + ff_dim * hidden_dim)
+        
+        # Total per layer
+        layer_flops = attention_total + ff_flops
+        
+        # Total for all layers
+        transformer_flops = num_layers * layer_flops
+        
+        # Add embedding and output layer FLOPs (rough estimate)
+        embedding_flops = seq_len * hidden_dim * hidden_dim  # Rough estimate
+        output_flops = seq_len * hidden_dim * 2  # Assuming output dimension is 2
+        
+        total_flops = transformer_flops + embedding_flops + output_flops
+        
+        print(f"\nFLOP breakdown (per sample):")
+        print(f"  - Attention (per layer): {attention_total:,}")
+        print(f"  - Feed-forward (per layer): {ff_flops:,}")
+        print(f"  - Per layer total: {layer_flops:,}")
+        print(f"  - All {num_layers} layers: {transformer_flops:,}")
+        print(f"  - Embedding & output: {embedding_flops + output_flops:,}")
+        print(f"  - Total estimated FLOPs: {total_flops:,}")
+        
+        # Multiply by 2 for forward + backward pass during training
+        training_flops = 2 * total_flops
+        print(f"  - Training FLOPs (forward + backward): {training_flops:,}")
+        
+        return total_flops
+
     MyDataset = ClassicDataset(
         path="./data/ps2_p72/rt1/snr10to20_speed5", 
         train_split=0.9, 
@@ -380,26 +454,37 @@ if __name__ == "__main__":
         task="main" # MUST BE "main" for ClassicDataset
     )
 
-
     ## prepare model
     experiment_name = "siso_1_umi_block_1_ps2_p72"
-    model_name = "HA03"
+    model_name = "HA02"
     model_hparams = cm.get_model_hparams(model_name, experiment_name)
 
     # initialize model
-    MyModel = HA03(model_hparams)
+    MyModel = HA02(model_hparams)
 
     for x, y in train_loader.take(1):
         print("\nMain task:")
         print(f"x shape: {x.shape}")
         print(f"y shape: {y.shape}")
+        
+        
+        # Build the model
         MyModel(x)
+        print(MyModel.summary())
+        break  # Only process first batch
 
-    print(MyModel.summary())
-
-    # train model
-    MyModel.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = 0.001),
-                    loss=tf.keras.losses.MeanSquaredError(name="loss"))
-    MyModel.fit(train_loader, validation_data=eval_loader, epochs = 5, callbacks=None)
+    # tf.profiler.experimental.start('logdir/')
+    # for x,y in train_loader.take(5):
+    #     MyModel(x)        # ← must execute ops here
+    # tf.profiler.experimental.stop()
+        
+        # # Method 2: Rough estimation based on parameters
+        # print("\nMethod 2: Parameter-based estimation")
+        # estimate_flops_from_params(MyModel, x.shape)
+        
+    # # train model
+    # MyModel.compile(optimizer=tf.keras.optimizers.Adam(learning_rate = 0.001),
+    #                 loss=tf.keras.losses.MeanSquaredError(name="loss"))
+    # MyModel.fit(train_loader, validation_data=eval_loader, epochs = 5, callbacks=None)
 
 

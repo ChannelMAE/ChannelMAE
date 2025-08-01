@@ -174,7 +174,7 @@ class Evaluator:
         # Load model and compile
         self.model.load_weights(self.model_dir)
         self.model.compile(
-            optimizer=tf.keras.optimizers.AdamW(self.config.learning_rate),
+            optimizer=tf.keras.optimizers.legacy.Adam(self.config.learning_rate),
             loss="mse"
         )
     
@@ -219,13 +219,12 @@ class Evaluator:
         dataset_class = cds.get_dataset_class(self.config.eval_dataset_name)
         
         # Evaluate baselines
-        if scenario == "rt1":
-            baselines = []
-        else:
-            baselines = []
-            # baselines = ["ALMMSE", "LMMSE", "LS", "DDCE"] 
+        # if scenario == "rt1":
+        #     baselines = []
+        # else:
+        #     baselines = ["ALMMSE", "LMMSE", "LS", "DDCE"] 
 
-        # baselines = ["ALMMSE", "LMMSE", "LS", "DDCE"] 
+        baselines = [] 
 
         # Evaluate baselines
         print(f"{scenario_name} {scenario} Baselines: {baselines}...")
@@ -619,7 +618,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Online adapt Channel Estimation")
 
     # Model related
-    parser.add_argument("--trained_model_dir", type=str, default="./models/dncnn_rt4.h5")
+    parser.add_argument("--trained_model_dir", type=str, default="dncnn.h5")
     
     # Dataset related
     parser.add_argument("--eval_dataset_name", type=str, default="Denoise")
@@ -630,9 +629,9 @@ if __name__ == "__main__":
     parser.add_argument("--aug_noise_std", type=float, default=0.5)
     
     # Training configs
-    parser.add_argument("--adapt_split", type=float, default=0.1)
-    parser.add_argument("--epochs", type=int, default=1) 
-    parser.add_argument("--learning_rate", type=float, default=2e-3)
+    parser.add_argument("--adapt_split", type=float, default=0.5)
+    parser.add_argument("--epochs", type=int, default=1) # 5 epochs...
+    parser.add_argument("--learning_rate", type=float, default=5e-4)
     
     # Other configs
     parser.add_argument("--seed", type=int, default=43)
@@ -641,20 +640,20 @@ if __name__ == "__main__":
     
     # Training specific
     
-    parser.add_argument("--train_data_dir", type=str, default="./data_TTTtrain/ps2_p72/rt2/snr15to16_speed5")
-    parser.add_argument("--train_snr", type=int, default=15)
+    parser.add_argument("--train_data_dir", type=str, default="./data/ps2_p72/rt2/snr20to21_speed5")
+    parser.add_argument("--train_snr", type=int, default=20)
     
     # Evaluation specific
     parser.add_argument("--eval_split", type=float, default=0.5)
     parser.add_argument("--eval_base_dir", type=str, default="./data/ps2_p72")
-    parser.add_argument("--scenario", type=str, default="rt2")
+    parser.add_argument("--scenario", type=str, default="rt1")
     parser.add_argument("--speed", type=str, default="5")
-    parser.add_argument("--eval_snr_min", type=int, default=0)
-    parser.add_argument("--eval_snr_max", type=int, default=20)
-    parser.add_argument("--eval_snr_step", type=int, default=5)
+    parser.add_argument("--eval_snr_min", type=int, default=15)
+    parser.add_argument("--eval_snr_max", type=int, default=15)
+    parser.add_argument("--eval_snr_step", type=int, default=1)
 
     # Add pre-training scenario argument
-    parser.add_argument("--pretrain_scenario", type=str, default="rt4",
+    parser.add_argument("--pretrain_scenario", type=str, default="rt0",
                        help="Scenario used during pre-training (for forgetting evaluation)")
     parser.add_argument("--pretrain_speed", type=str, default="5",
                        help="Speed of the pre-training scenario")
